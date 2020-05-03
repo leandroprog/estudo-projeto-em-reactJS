@@ -1,52 +1,61 @@
-import React from 'react';
+import React, { useState, FormEvent } from 'react';
 import { FiChevronRight } from 'react-icons/fi';
+
+import api from '../../services/api';
 
 import logoImg from '../../assets/logo.svg';
 import { Title, Form, Repositories } from './styles';
 
+interface Repository {
+  full_name: string;
+  description: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+}
+
 const Dashboard: React.FC = () => {
+  const [newRepo, setNewRepo] = useState('');
+
+  const [repositories, setRespositories] = useState<Repository[]>([]);
+
+  async function handlerAddRepository(
+    event: FormEvent<HTMLFormElement>
+  ): Promise<void> {
+    event.preventDefault();
+    // Adição de um novo repositório
+
+    const response = await api.get<Repository>(`repos/${newRepo}`);
+    const repository = response.data;
+
+    setRespositories([...repositories, repository]);
+    setNewRepo('');
+  }
+
   return (
     <>
       <img src={logoImg} alt="Github Explorer" />
       <Title>Explore repositórios no Github</Title>
-      <Form>
-        <input placeholder="Digite o nome do repósitorio" />
+      <Form onSubmit={handlerAddRepository}>
+        <input
+          value={newRepo}
+          onChange={(e) => setNewRepo(e.target.value)}
+          placeholder="Digite o nome do repósitorio"
+        />
         <button type="submit">Pesquisar</button>
       </Form>
       <Repositories>
-        <a href="teste">
-          <img
-            src="https://avatars3.githubusercontent.com/u/4483666?s=460&u=80e553025b11af70c0764ff71b01bdc9e16007f0&v=4"
-            alt="Leandro Rocha"
-          />
-          <div>
-            <strong>Roketseat/unform</strong>
-            <p>Testando a descrição</p>
-          </div>
-          <FiChevronRight size={20} />
-        </a>
-        <a href="teste">
-          <img
-            src="https://avatars3.githubusercontent.com/u/4483666?s=460&u=80e553025b11af70c0764ff71b01bdc9e16007f0&v=4"
-            alt="Leandro Rocha"
-          />
-          <div>
-            <strong>Roketseat/unform</strong>
-            <p>Testando a descrição</p>
-          </div>
-          <FiChevronRight size={20} />
-        </a>
-        <a href="teste">
-          <img
-            src="https://avatars3.githubusercontent.com/u/4483666?s=460&u=80e553025b11af70c0764ff71b01bdc9e16007f0&v=4"
-            alt="Leandro Rocha"
-          />
-          <div>
-            <strong>Roketseat/unform</strong>
-            <p>Testando a descrição</p>
-          </div>
-          <FiChevronRight size={20} />
-        </a>
+        {repositories.map((item) => (
+          <a key={item.full_name} href="teste">
+            <img src={item.owner.avatar_url} alt={item.owner.login} />
+            <div>
+              <strong>{item.full_name}</strong>
+              <p>{item.description}</p>
+            </div>
+            <FiChevronRight size={20} />
+          </a>
+        ))}
       </Repositories>
     </>
   );
